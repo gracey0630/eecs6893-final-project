@@ -1,0 +1,444 @@
+{
+    "date": "2025-11-21T11:21:08.823981",
+    "subreddit_stats": [
+        {
+            "subreddit": "dalle2",
+            "checked": 924,
+            "passed_flair": 520,
+            "passed_image": 293,
+            "passed_nsfw": 293,
+            "new_images": 0,
+            "download_errors": 0,
+            "images": []
+        },
+        {
+            "subreddit": "midjourney",
+            "checked": 1000,
+            "passed_flair": 428,
+            "passed_image": 185,
+            "passed_nsfw": 184,
+            "new_images": 4,
+            "download_errors": 0,
+            "images": [
+                {
+                    "submission_id": "1p32smy",
+                    "filename": "img_midjourney_1p32smy.png",
+                    "url": "https://i.redd.it/6xxpel0exm2g1.png",
+                    "subreddit": "midjourney",
+                    "date": "2025-11-21T11:15:19",
+                    "target_subr": "midjourney",
+                    "flair": "AI Showcase - Midjourney"
+                },
+                {
+                    "submission_id": "1p2vskq",
+                    "filename": "img_midjourney_1p2vskq.jpeg",
+                    "url": "https://i.redd.it/lh8v9pqael2g1.jpeg",
+                    "subreddit": "midjourney",
+                    "date": "2025-11-21T06:05:00",
+                    "target_subr": "midjourney",
+                    "flair": "AI Showcase - Midjourney"
+                },
+                {
+                    "submission_id": "1p2ukh8",
+                    "filename": "img_midjourney_1p2ukh8.jpeg",
+                    "url": "https://i.redd.it/i06rbdvw0l2g1.jpeg",
+                    "subreddit": "midjourney",
+                    "date": "2025-11-21T04:50:04",
+                    "target_subr": "midjourney",
+                    "flair": "AI Showcase - Midjourney"
+                },
+                {
+                    "submission_id": "1p2tag0",
+                    "filename": "img_midjourney_1p2tag0.png",
+                    "url": "https://i.redd.it/namqhflylk2g1.png",
+                    "subreddit": "midjourney",
+                    "date": "2025-11-21T03:26:22",
+                    "target_subr": "midjourney",
+                    "flair": "AI Showcase - Midjourney"
+                }
+            ]
+        },
+        {
+            "subreddit": "aiArt",
+            "checked": 1000,
+            "passed_flair": 64,
+            "passed_image": 42,
+            "passed_nsfw": 41,
+            "new_images": 41,
+            "download_errors": 0,
+            "images": [
+                {
+                    "submission_id": "1p2rbpi",
+                    "filename": "img_midjourney_1p2rbpi.png",
+                    "url": "https://i.redd.it/v5tj89bpzj2g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-21T01:22:31",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p2r7i0",
+                    "filename": "img_midjourney_1p2r7i0.png",
+                    "url": "https://i.redd.it/6vm69oahyj2g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-21T01:15:44",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p2r12b",
+                    "filename": "img_midjourney_1p2r12b.png",
+                    "url": "https://i.redd.it/0gewz3bfwj2g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-21T01:05:09",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p1vdgx",
+                    "filename": "img_dalle2_1p1vdgx.jpeg",
+                    "url": "https://i.redd.it/lhivio6toc2g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-20T00:48:10",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1p1jllp",
+                    "filename": "img_midjourney_1p1jllp.png",
+                    "url": "https://i.redd.it/gspjy1lt1a2g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-19T15:57:01",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p1je3f",
+                    "filename": "img_midjourney_1p1je3f.png",
+                    "url": "https://i.redd.it/2375u4e20a2g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-19T15:48:58",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p1j4ph",
+                    "filename": "img_midjourney_1p1j4ph.png",
+                    "url": "https://i.redd.it/9pwemaefy92g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-19T15:38:51",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p14zcf",
+                    "filename": "img_dalle2_1p14zcf.png",
+                    "url": "https://i.redd.it/non1p1h0572g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-19T06:17:16",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1p0o00f",
+                    "filename": "img_midjourney_1p0o00f.png",
+                    "url": "https://i.redd.it/lrw9fdtvy22g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-18T16:08:27",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p0nsij",
+                    "filename": "img_midjourney_1p0nsij.png",
+                    "url": "https://i.redd.it/98iw7q59x22g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-18T16:00:59",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1p05dbx",
+                    "filename": "img_midjourney_1p05dbx.png",
+                    "url": "https://i.redd.it/mhvwe1zxsy1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-18T02:06:14",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ozpmle",
+                    "filename": "img_dalle2_1ozpmle.jpeg",
+                    "url": "https://i.redd.it/d4f387fmbv1g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-17T14:24:06",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1oz9aa1",
+                    "filename": "img_midjourney_1oz9aa1.png",
+                    "url": "https://i.redd.it/gh2295vvir1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-17T01:37:49",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oz8ucf",
+                    "filename": "img_midjourney_1oz8ucf.png",
+                    "url": "https://i.redd.it/r1jx15n8er1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-17T01:11:27",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oyq31k",
+                    "filename": "img_dalle2_1oyq31k.jpeg",
+                    "url": "https://i.redd.it/y6ezjy2han1g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T11:29:44",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1oym7ij",
+                    "filename": "img_midjourney_1oym7ij.png",
+                    "url": "https://i.redd.it/f93ly4zwim1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T08:49:52",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oyfgs5",
+                    "filename": "img_midjourney_1oyfgs5.jpeg",
+                    "url": "https://i.redd.it/x5bkz71hmk1g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T02:24:56",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oyf3i3",
+                    "filename": "img_midjourney_1oyf3i3.png",
+                    "url": "https://i.redd.it/3xdyx4mbik1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T02:02:41",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oyezdr",
+                    "filename": "img_midjourney_1oyezdr.png",
+                    "url": "https://i.redd.it/i64s89l5hk1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T01:55:53",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oyevfq",
+                    "filename": "img_midjourney_1oyevfq.png",
+                    "url": "https://i.redd.it/4h6jj10pfk1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-16T01:49:17",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oxzx5e",
+                    "filename": "img_dalle2_1oxzx5e.jpeg",
+                    "url": "https://i.redd.it/91skar2i7a1g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-15T14:03:21",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1oxzow0",
+                    "filename": "img_midjourney_1oxzow0.png",
+                    "url": "https://i.redd.it/21k27ayjwg1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-15T13:54:21",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oxqasj",
+                    "filename": "img_midjourney_1oxqasj.png",
+                    "url": "https://i.redd.it/c21uf2l7x91g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-15T07:18:09",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1oxa4x7",
+                    "filename": "img_midjourney_1oxa4x7.png",
+                    "url": "https://i.redd.it/e1xk49s4qa1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T17:08:38",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ox9s3o",
+                    "filename": "img_midjourney_1ox9s3o.png",
+                    "url": "https://i.redd.it/1axxio2lna1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T16:54:35",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ox9lux",
+                    "filename": "img_midjourney_1ox9lux.jpeg",
+                    "url": "https://i.redd.it/nzgompckma1g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T16:47:38",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ox7o2y",
+                    "filename": "img_midjourney_1ox7o2y.png",
+                    "url": "https://i.redd.it/86f2bq5v8a1g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T15:30:51",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1owzzo5",
+                    "filename": "img_dalle2_1owzzo5.jpeg",
+                    "url": "https://i.redd.it/wdmdescwt81g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T10:45:34",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1owqq9p",
+                    "filename": "img_midjourney_1owqq9p.png",
+                    "url": "https://i.redd.it/kionvnryj61g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T03:06:13",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1owoiz0",
+                    "filename": "img_midjourney_1owoiz0.png",
+                    "url": "https://i.redd.it/kvfjfckzv51g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-14T00:51:40",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1owm8wy",
+                    "filename": "img_dalle2_1owm8wy.jpeg",
+                    "url": "https://i.redd.it/bv5vazrna51g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-13T22:51:58",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1owbq7e",
+                    "filename": "img_midjourney_1owbq7e.png",
+                    "url": "https://i.redd.it/v5qkxmgl031g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-13T15:16:47",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ow4dpw",
+                    "filename": "img_dalle2_1ow4dpw.jpeg",
+                    "url": "https://i.redd.it/08w0modeo11g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-13T10:42:21",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1ovhj26",
+                    "filename": "img_midjourney_1ovhj26.png",
+                    "url": "https://i.redd.it/yjsufjdm5w0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T16:07:49",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ovefpc",
+                    "filename": "img_midjourney_1ovefpc.png",
+                    "url": "https://i.redd.it/x5cznguykv0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T14:13:05",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ovdqso",
+                    "filename": "img_dalle2_1ovdqso.jpeg",
+                    "url": "https://i.redd.it/su3p4eyqgv0g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T13:48:51",
+                    "target_subr": "dalle2",
+                    "flair": "Image - DALL E 3 :a2:"
+                },
+                {
+                    "submission_id": "1ov9e07",
+                    "filename": "img_midjourney_1ov9e07.jpeg",
+                    "url": "https://i.redd.it/1k26c660pu0g1.jpeg",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T11:12:48",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ov45rk",
+                    "filename": "img_midjourney_1ov45rk.png",
+                    "url": "https://i.redd.it/qjnpmnzvnt0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T07:45:14",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ov2864",
+                    "filename": "img_midjourney_1ov2864.png",
+                    "url": "https://i.redd.it/hl5jjs9m5t0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T06:03:21",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ov0cy2",
+                    "filename": "img_midjourney_1ov0cy2.png",
+                    "url": "https://i.redd.it/txjam8foks0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T04:05:04",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                },
+                {
+                    "submission_id": "1ouzkxi",
+                    "filename": "img_midjourney_1ouzkxi.png",
+                    "url": "https://i.redd.it/mfyrnmirbs0g1.png",
+                    "subreddit": "aiArt",
+                    "date": "2025-11-12T03:15:11",
+                    "target_subr": "midjourney",
+                    "flair": "Image - Midjourney :a2:"
+                }
+            ]
+        }
+    ],
+    "total_new_images": 45,
+    "total_errors": 0
+}

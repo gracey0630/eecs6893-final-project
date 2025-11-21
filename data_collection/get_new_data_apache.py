@@ -1,23 +1,17 @@
-"""
-Apache Airflow DAG for GCP VM
-Daily collection of new images from Reddit subreddits to GCS bucket
-Optimized for running on Google Cloud Platform VM
-"""
-
-from datetime import datetime, timedelta
-import pandas as pd
 import praw
+from datetime import datetime, timedelta
 from pathlib import Path
 import json
 import requests
-from google.cloud import storage
 import os
 import logging
-import tempfile
+import pandas as pd
+import csv
+from io import StringIO
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.utils.decorators import apply_defaults
+from google.cloud import storage
 
 ####################################################
 # CONFIGURATION
@@ -29,198 +23,63 @@ AIART_SUBR = "aiArt"
 SUBREDDITS = [DALLE_SUBR, MIDJ_SUBR, AIART_SUBR]
 
 # GCS Configuration
-BUCKET_NAME = "eecs6893-bkt"  # Update with your actual bucket name
-GCS_DATA_DIR = "reddit_images"
+GCS_BUCKET = "art-bkt" 
+GCS_PROJECT = "eecs6893-471617"
 
-# Reddit API Configuration (from your extract_data.ipynb)
-REDDIT_CLIENT_ID = "JT_iiB-NFwFyoknGwv5fYA"
-REDDIT_CLIENT_SECRET = "aVY6bitDc5BS8j4LX1cWusWjlgCaVQ"
-REDDIT_USER_AGENT = "mac:eecs6893Project:v1.0 (by u/Superb-Cap8523)"
+# Reddit API Configuration
+REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID', '')
+REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET', '')
+REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT', 'mac:eecs6893Project:v1.0 (by u/Superb-Cap8523)')
 
-# Flairs from your extract_data.ipynb
-FLAIR_DICT = {
-    MIDJ_SUBR: set(['AI Showcase - Midjourney']),
-    DALLE_SUBR: set(['DALL·E 2', 'DALL·E 3']),
-    AIART_SUBR: set([
-        'Image -  I used x/ai\'s "Imagine Image and Video Generator."  ',
-        'Image - Bing Image Creator :a2:',
-        'Image - BudgetPixel',
-        'Image - BudgetPixel AI',
-        'Image - ChatGPT :a2:',
-        'Image - CivitAI\xa0:a2:',
-        'Image - ComfyUI',
-        'Image - Custom',
-        'Image - DALL E 3 :a2:',
-        'Image - DeepAI',
-        'Image - Eggie.ai',
-        'Image - Etana',
-        'Image - FLUX :a2:',
-        'Image - Gemini',
-        'Image - Google Gemini :a2:',
-        'Image - Google Imagen',
-        'Image - Grok',
-        'Image - Illustrious',
-        'Image - ImageFX.',
-        'Image - Komiko',
-        'Image - Leonardo.ai :a2:',
-        'Image - Mage.space',
-        'Image - Meta AI  :a2:',
-        'Image - Microsoft Copilot',
-        'Image - Midjourney :a2:',
-        'Image - MuleRun Agent',
-        'Image - MuleRun Halloween Costume Agent',
-        'Image - Nightcafe :a2:',
-        'Image - Other: Aierone',
-        'Image - Other: ComfyUI',
-        'Image - Other: Flat AI',
-        'Image - Other: Grok Imagine',
-        'Image - Other: Hailou Ai',
-        'Image - Other: Moescape [Illustrious]',
-        'Image - Other: MuleRunAI',
-        'Image - Other: NovelAI',
-        'Image - Other: PixNova AI',
-        'Image - Other: Please edit, or your post may be deleted.',
-        'Image - Other: Seedream 4.0',
-        'Image - Other: Wan/Grok/Meta/Nano Banana/Qwen',
-        'Image - Other: Whisk',
-        'Image - Qwen',
-        'Image - Seedream',
-        'Image - Seedream 1.0',
-        'Image - Sogni AI',
-        'Image - SoraAI :a2:',
-        'Image - Stable Diffusion + Manual Editing',
-        'Image - Stable Diffusion :a2:',
-        'Image - String AI',
-        'Image - VQGAN+clip',
-        'Image - Wan',
-        'Image - Whisk',
-        'Image - etana'
-    ])
+# Content type mapping - convert any jpg to jpeg
+CONTENT_TYPE_MAP = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png'
 }
 
+# Flairs
+FLAIR_DICT = {DALLE_SUBR: set(['DALL·E 2', 'DALL·E 3']),
+              MIDJ_SUBR: set(['AI Showcase - Midjourney']),
+              AIART_SUBR: set(['Image - DALL E 3 :a2:',
+                              'Image - Midjourney :a2:'])
+            }
+
+AIART_MAP = {'Image - DALL E 3 :a2:': DALLE_SUBR,
+            'Image - Midjourney :a2:': MIDJ_SUBR}
+
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 ####################################################
-# GCP-SPECIFIC HELPER FUNCTIONS
+# HELPER FUNCTIONS
 ####################################################
 
-def get_gcs_client():
-    """
-    Initialize GCS client
-    Assumes VM has default credentials set up
-    (Compute Engine service account or Application Default Credentials)
-    """
+def get_gcs_submission_ids(subr):
+    """ Get existing submission IDs from GCS CSV metadata """
+    
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(GCS_BUCKET)
+    blob = bucket.blob(f"{subr}/metadata.csv")
+    
     try:
-        client = storage.Client()
-        logger.info("✓ GCS client initialized successfully")
-        return client
+        if blob.exists():
+            csv_data = blob.download_as_string().decode('utf-8')
+            df = pd.read_csv(StringIO(csv_data))
+            return set(df['submission_id'].tolist())
+        else:
+            logger.warning(f"No metadata.csv found for r/{subr} in GCS")
+            return set()
     except Exception as e:
-        logger.error(f"❌ Failed to initialize GCS client: {e}")
-        raise
-
-def get_existing_image_ids_from_gcs(bucket_name, subr):
-    """
-    Get all existing image IDs from GCS bucket
-    
-    Args:
-        bucket_name: GCS bucket name
-        subr: subreddit name
-    
-    Returns:
-        Set of submission IDs already downloaded
-    """
-    try:
-        client = get_gcs_client()
-        bucket = client.bucket(bucket_name)
-        
-        existing_ids = set()
-        prefix = f"{GCS_DATA_DIR}/{subr}/"
-        
-        # List all blobs in the subreddit folder
-        blobs = bucket.list_blobs(prefix=prefix)
-        
-        for blob in blobs:
-            # Skip metadata files
-            if blob.name.endswith('metadata.json'):
-                continue
-            
-            # Extract submission ID from blob name
-            # Format: reddit_images/{subr}/img_{subr}_{submission_id}.{ext}
-            filename = blob.name.split('/')[-1]
-            
-            if filename.startswith('img_'):
-                parts = filename.split('_')
-                if len(parts) >= 3:
-                    submission_id = "_".join(parts[2:]).split('.')[0]
-                    existing_ids.add(submission_id)
-        
-        logger.info(f"Found {len(existing_ids)} existing images for r/{subr} in GCS")
-        return existing_ids
-    
-    except Exception as e:
-        logger.error(f"Error getting existing IDs from GCS: {e}")
-        raise
-
-def upload_to_gcs(bucket_name, local_file_path, gcs_file_path):
-    """
-    Upload file to GCS with retries
-    
-    Args:
-        bucket_name: GCS bucket name
-        local_file_path: Local file path
-        gcs_file_path: Target GCS path (without gs:// prefix)
-    
-    Returns:
-        True if successful
-    """
-    try:
-        client = get_gcs_client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(gcs_file_path)
-        
-        # Upload with timeout
-        blob.upload_from_filename(local_file_path, timeout=300)
-        logger.info(f"✓ Uploaded to gs://{bucket_name}/{gcs_file_path}")
-        return True
-    
-    except Exception as e:
-        logger.error(f"❌ Error uploading to GCS: {e}")
-        return False
-
-def download_from_gcs(bucket_name, gcs_file_path, local_file_path):
-    """
-    Download file from GCS
-    
-    Args:
-        bucket_name: GCS bucket name
-        gcs_file_path: GCS file path (without gs:// prefix)
-        local_file_path: Local destination
-    
-    Returns:
-        True if successful
-    """
-    try:
-        client = get_gcs_client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(gcs_file_path)
-        
-        # Check if blob exists
-        if not blob.exists():
-            logger.warning(f"File does not exist in GCS: {gcs_file_path}")
-            return False
-        
-        blob.download_to_filename(local_file_path, timeout=300)
-        logger.info(f"✓ Downloaded gs://{bucket_name}/{gcs_file_path}")
-        return True
-    
-    except Exception as e:
-        logger.error(f"❌ Error downloading from GCS: {e}")
-        return False
+        logger.warning(f"Could not read metadata.csv for r/{subr}: {e}")
+        return set()
 
 def get_file_extension(url):
-    """Extract file extension from URL"""
+    """ extract file extension from URL """
     from urllib.parse import urlparse
     
     parsed_url = urlparse(url)
@@ -228,52 +87,28 @@ def get_file_extension(url):
     
     return ext.lower() if ext else '.jpg'
 
-####################################################
-# MAIN COLLECTION FUNCTIONS
-####################################################
-
-def collect_new_images_from_subreddit(subr, flair):
-    """
-    Collect new images from a subreddit and upload to GCS
+def upload_new_images_to_gcs(**context):
+    """ collect new images from a subreddit """
     
-    Args:
-        subr: Subreddit name
-        flair: Set of valid flairs
-    
-    Returns:
-        Dict with collection statistics
-    """
+    subr = context['params']['subr']
+    flair = FLAIR_DICT[subr]
     
     logger.info(f"\n{'='*70}")
     logger.info(f"Collecting new images from r/{subr}")
     logger.info(f"{'='*70}")
     
-    try:
-        # Initialize Reddit client
-        reddit = praw.Reddit(
-            client_id=REDDIT_CLIENT_ID,
-            client_secret=REDDIT_CLIENT_SECRET,
-            user_agent=REDDIT_USER_AGENT
-        )
-        logger.info("✓ Reddit client initialized")
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize Reddit client: {e}")
-        raise
+    # Initialize Reddit client
+    reddit = praw.Reddit(
+        client_id=REDDIT_CLIENT_ID,
+        client_secret=REDDIT_CLIENT_SECRET,
+        user_agent=REDDIT_USER_AGENT
+    )
     
-    # Get existing image IDs from GCS
-    try:
-        existing_ids = get_existing_image_ids_from_gcs(BUCKET_NAME, subr)
-    except Exception as e:
-        logger.error(f"❌ Failed to get existing IDs: {e}")
-        raise
+    # get existing image IDs from GCS
+    existing_ids = get_gcs_submission_ids(subr)
     
-    # Collect new posts
-    try:
-        subreddit = reddit.subreddit(subr)
-    except Exception as e:
-        logger.error(f"❌ Failed to access subreddit: {e}")
-        raise
-    
+    # collect new posts
+    subreddit = reddit.subreddit(subr)
     new_images = []
     stats = {
         'subreddit': subr,
@@ -283,80 +118,76 @@ def collect_new_images_from_subreddit(subr, flair):
         'passed_nsfw': 0,
         'new_images': 0,
         'download_errors': 0,
-        'upload_errors': 0,
         'images': []
     }
     
     image_extensions = ('.jpg', '.jpeg', '.png')
+
+    # get GCS bucket
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(GCS_BUCKET)
     
-    # Use temporary directory for intermediate files
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = Path(tmp_dir)
+    # Check most recent 1000 posts
+    for submission in subreddit.new(limit=1000):
+        stats['checked'] += 1
         
-        # Check most recent 500 posts
+        # check if post has flair and if so if it is relevant
+        if not submission.link_flair_text or submission.link_flair_text not in flair:
+            continue
+        stats['passed_flair'] += 1
+        
+        # check if URL is image
+        if not submission.url.endswith(image_extensions):
+            continue
+        stats['passed_image'] += 1
+        
+        # skip NSFW
+        if submission.over_18:
+            continue
+        stats['passed_nsfw'] += 1
+        
+        # check if NEW (not already downloaded)
+        if submission.id in existing_ids:
+            continue
+        
+        # download new images
         try:
-            for submission in subreddit.new(limit=500):
-                stats['checked'] += 1
-                
-                # Filter 1: Check flair
-                if submission.link_flair_text not in flair:
-                    continue
-                stats['passed_flair'] += 1
-                
-                # Filter 2: Check if URL is image
-                if not submission.url.endswith(image_extensions):
-                    continue
-                stats['passed_image'] += 1
-                
-                # Filter 3: Skip NSFW
-                if submission.over_18:
-                    continue
-                stats['passed_nsfw'] += 1
-                
-                # Filter 4: Check if NEW (not already downloaded)
-                if submission.id in existing_ids:
-                    continue
-                
-                # This is a NEW image! Download and upload to GCS
-                try:
-                    # Download image
-                    response = requests.get(submission.url, timeout=10)
-                    
-                    # Get original extension
-                    original_ext = get_file_extension(submission.url)
-                    filename = f"img_{subr}_{submission.id}{original_ext}"
-                    
-                    # Save to temporary directory
-                    local_path = tmp_path / filename
-                    with open(local_path, 'wb') as f:
-                        f.write(response.content)
-                    
-                    # Upload to GCS
-                    gcs_path = f"{GCS_DATA_DIR}/{subr}/{filename}"
-                    if upload_to_gcs(BUCKET_NAME, str(local_path), gcs_path):
-                        stats['new_images'] += 1
-                        new_images.append({
-                            'filename': filename,
-                            'submission_id': submission.id,
-                            'url': submission.url,
-                            'flair': submission.link_flair_text,
-                            'created_at': datetime.fromtimestamp(submission.created_utc).isoformat(),
-                            'score': submission.score,
-                        })
-                        logger.info(f"✓ Downloaded and uploaded: {filename}")
-                    else:
-                        stats['upload_errors'] += 1
-                
-                except requests.Timeout:
-                    stats['download_errors'] += 1
-                    logger.error(f"✗ Timeout downloading {submission.url}")
-                except Exception as e:
-                    stats['download_errors'] += 1
-                    logger.error(f"✗ Error downloading {submission.url}: {e}")
+            response = requests.get(submission.url, timeout=10)
+            
+            # get original extension
+            original_ext = get_file_extension(submission.url)
+            
+            # determine target subreddit and folder
+            if subr == AIART_SUBR:
+                target_subr = AIART_MAP[submission.link_flair_text]
+            else:
+                target_subr = subr
+            
+            filename = f"img_{target_subr}_{submission.id}{original_ext}"
+
+            # upload images to gcs
+            blob = bucket.blob(f"{target_subr}/{filename}")
+            content_type = CONTENT_TYPE_MAP.get(original_ext, 'image/jpeg')
+            blob.upload_from_string(
+                response.content,
+                content_type = content_type
+            )
+
+            
+            stats['new_images'] += 1
+            new_images.append({
+                'submission_id': submission.id,
+                'filename': filename,
+                'url': submission.url,
+                'subreddit': subr,
+                'date': datetime.fromtimestamp(submission.created_utc).isoformat(),
+                'target_subr': target_subr, # need this bc we need to write metadata to target_subr folder
+            })
+            logger.info(f"Downloaded new image: {filename}")
         
         except Exception as e:
-            logger.error(f"❌ Error iterating through posts: {e}")
-            raise
+            stats['download_errors'] += 1
+            logger.error(f"Error downloading {submission.url}: {e}")
     
     stats['images'] = new_images
     
@@ -366,171 +197,166 @@ def collect_new_images_from_subreddit(subr, flair):
     logger.info(f"  Passed flair filter: {stats['passed_flair']}")
     logger.info(f"  Passed image filter: {stats['passed_image']}")
     logger.info(f"  Passed NSFW filter: {stats['passed_nsfw']}")
-    logger.info(f"  🆕 New images: {stats['new_images']}")
-    logger.info(f"  ❌ Download errors: {stats['download_errors']}")
-    logger.info(f"  ⚠️  Upload errors: {stats['upload_errors']}")
+    logger.info(f"  New images: {stats['new_images']}")
+    logger.info(f"  Download errors: {stats['download_errors']}")
+    
+    # Push stats and images to XCom for next task
+    context['task_instance'].xcom_push(key=f'{subr}_stats', value=stats)
+    context['task_instance'].xcom_push(key=f'{subr}_images', value=new_images)
     
     return stats
 
-def update_metadata_json_gcs(bucket_name, subr, new_images):
-    """
-    Update metadata.json for dalle2 and aiArt subreddits in GCS
+def update_metadata_csv(**context):
+    """ update metadata.csv in GCS """
     
-    Args:
-        bucket_name: GCS bucket name
-        subr: Subreddit name
-        new_images: List of new image metadata dicts
-    """
-    
-    if subr not in [DALLE_SUBR, AIART_SUBR]:
-        logger.info(f"Skipping metadata update for r/{subr}")
-        return
+    # get
+    subr = context['params']['subr']
+    new_images = context['task_instance'].xcom_pull(key=f'{subr}_images')
     
     if not new_images:
         logger.info(f"No new images for r/{subr}, skipping metadata update")
         return
     
     try:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
+        # group images by target subreddit (dalle2 or midjourney)
+        images_by_target = {}
+        for img in new_images:
+            target_subr = img['target_subr']
+            if target_subr not in images_by_target:
+                images_by_target[target_subr] = []
+            images_by_target[target_subr].append(img)
+        
+        # update metadata.csv in GCS for each target subreddit
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(GCS_BUCKET)
+        
+        for target_subr, images in images_by_target.items():
+            blob = bucket.blob(f"{target_subr}/metadata.csv")
             
-            # Download existing metadata from GCS
-            metadata_gcs_path = f"{GCS_DATA_DIR}/{subr}/metadata.json"
-            metadata_local_path = tmp_path / f"{subr}_metadata.json"
-            
-            # Load existing metadata or create new dict
-            if download_from_gcs(bucket_name, metadata_gcs_path, str(metadata_local_path)):
-                with open(metadata_local_path, 'r') as f:
-                    metadata = json.load(f)
-                logger.info(f"Loaded existing metadata for r/{subr}")
+            # read existing CSV from GCS if it exists
+            if blob.exists():
+                csv_data = blob.download_as_string().decode('utf-8')
+                df_existing = pd.read_csv(StringIO(csv_data))
             else:
-                metadata = {}
-                logger.info(f"Creating new metadata for r/{subr}")
+                df_existing = None
             
-            # Add new images to metadata
-            for img in new_images:
-                img_gcs_path = f"{GCS_DATA_DIR}/{subr}/{img['filename']}"
-                metadata[img_gcs_path] = {
-                    'flair': img['flair'],
-                    'url': img['url'],
-                    'created_at': img['created_at'],
-                    'score': img['score'],
-                }
+            # Create DataFrame from new images
+            df_new = pd.DataFrame([{
+                'submission_id': img['submission_id'],
+                'filename': img['filename'],
+                'url': img['url'],
+                'subreddit': img['subreddit'],
+                'date': img['date']
+            } for img in images])
             
-            # Save updated metadata locally
-            with open(metadata_local_path, 'w') as f:
-                json.dump(metadata, f, indent=4)
-            
-            # Upload updated metadata back to GCS
-            if upload_to_gcs(bucket_name, str(metadata_local_path), metadata_gcs_path):
-                logger.info(f"✓ Updated metadata.json for r/{subr} with {len(new_images)} new entries")
+            # Combine with existing data
+            if df_existing is not None:
+                df_combined = pd.concat([df_existing, df_new], ignore_index=True)
             else:
-                logger.error(f"❌ Failed to upload metadata for r/{subr}")
+                df_combined = df_new
+            
+            # Upload to GCS
+            csv_string = df_combined.to_csv(index=False)
+            blob.upload_from_string(csv_string, content_type='text/csv')
+            
+            logger.info(f"✓ Updated metadata.csv in GCS for {target_subr} with {len(images)} entries")
     
     except Exception as e:
-        logger.error(f"❌ Error updating metadata for r/{subr}: {e}")
+        logger.error(f"Error updating metadata for r/{subr}: {e}")
 
-def collect_all_subreddit_images():
-    """
-    Main function: Collect images from all subreddits
-    Called by Airflow daily
-    """
-    
-    logger.info("\n" + "="*70)
-    logger.info(f"DAILY IMAGE COLLECTION STARTED - {datetime.now()}")
-    logger.info(f"GCS Bucket: {BUCKET_NAME}")
-    logger.info("="*70)
+
+def create_daily_log(**context):
+    """ create and upload daily log to GCS """
     
     all_stats = []
     
-    # Collect from each subreddit
+    # Pull stats from all subreddit tasks
     for subr in SUBREDDITS:
-        try:
-            stats = collect_new_images_from_subreddit(subr, FLAIR_DICT[subr])
-            all_stats.append(stats)
-            
-            # Update metadata for dalle2 and aiArt
-            if subr in [DALLE_SUBR, AIART_SUBR]:
-                update_metadata_json_gcs(BUCKET_NAME, subr, stats['images'])
-        
-        except Exception as e:
-            logger.error(f"❌ Failed to collect from r/{subr}: {e}")
-            all_stats.append({
-                'subreddit': subr,
-                'error': str(e),
-                'new_images': 0,
-            })
+        stats = context['task_instance'].xcom_pull(task_ids=f'collect_images_{subr}', key=f'{subr}_stats')
+        if stats:  # Only append if stats exist
+           all_stats.append(stats)
     
     # Create daily log
     log_data = {
         'date': datetime.now().isoformat(),
         'subreddit_stats': all_stats,
-        'total_new_images': sum(s.get('new_images', 0) for s in all_stats),
-        'total_errors': sum(s.get('download_errors', 0) + s.get('upload_errors', 0) for s in all_stats if isinstance(s, dict) and 'download_errors' in s),
+        'total_new_images': sum(s['new_images'] for s in all_stats),
+        'total_errors': sum(s['download_errors'] for s in all_stats),
     }
     
-    # Save log to GCS
-    try:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
-            log_local_path = tmp_path / f"daily_collection_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            
-            with open(log_local_path, 'w') as f:
-                json.dump(log_data, f, indent=4)
-            
-            log_gcs_path = f"{GCS_DATA_DIR}/logs/daily_collection_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            upload_to_gcs(BUCKET_NAME, str(log_local_path), log_gcs_path)
+    # Upload log to GCS
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(GCS_BUCKET)
     
-    except Exception as e:
-        logger.error(f"❌ Error saving log: {e}")
+    log_filename = f"logs/daily_collection_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    blob = bucket.blob(log_filename)
+    blob.upload_from_string(json.dumps(log_data, indent=4), content_type='application/json')
     
     logger.info("\n" + "="*70)
     logger.info("DAILY IMAGE COLLECTION SUMMARY")
     logger.info("="*70)
     for stats in all_stats:
-        if 'error' in stats:
-            logger.error(f"r/{stats['subreddit']}: ERROR - {stats['error']}")
-        else:
-            logger.info(f"r/{stats['subreddit']}: {stats['new_images']} new images")
+        logger.info(f"r/{stats['subreddit']}: {stats['new_images']} new images")
     logger.info(f"\nTotal new images: {log_data['total_new_images']}")
     logger.info(f"Total errors: {log_data['total_errors']}")
+    logger.info(f"Log uploaded to GCS: gs://{GCS_BUCKET}/{log_filename}")
     logger.info("="*70 + "\n")
 
 ####################################################
-# AIRFLOW DAG DEFINITION
+# AIRFLOW DAG
 ####################################################
 
 default_args = {
-    'owner': 'reddit-image-collector',
+    'owner': 'gy2354',
     'depends_on_past': False,
-    'email': ['your-email@example.com'],  # Update with your email
+    'start_date': datetime(2025, 1, 1),
+    'email': ['gy2354@ecolumbia.edu'],
     'email_on_failure': True,
-    'email_on_retry': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=10),
-    'execution_timeout': timedelta(hours=2),  # Timeout after 2 hours
+    'email_on_retry': True,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
 }
 
-with DAG(
-    'daily_reddit_image_collection_gcp',
+dag = DAG(
+    'reddit_image_scraper',
     default_args=default_args,
-    description='Daily collection of new images from Reddit AI art subreddits to GCS',
-    schedule_interval='0 9 * * *',  # 9 AM UTC every day
-    start_date=datetime(2025, 1, 1),
+    description='scrape images daily from r/dalle2, r/midjourney, and r/aiArt',
+    schedule_interval='00 16 * * *',  # run daily at 11 am
     catchup=False,
-    tags=['reddit', 'image-collection', 'ai-art', 'gcp'],
-) as dag:
+    tags=['reddit', 'data-collection', 'gcs'],
+)
 
-    ##########################################
-    # TASK DEFINITION
-    ##########################################
+# Create tasks for each subreddit
+collect_tasks = {}
+metadata_tasks = {}
 
-    collect_images_task = PythonOperator(
-        task_id='collect_new_images_to_gcs',
-        python_callable=collect_all_subreddit_images,
-        retries=2,
-        pool='default_pool',
+for subr in SUBREDDITS:
+    # collect and upload images
+    collect_tasks[subr] = PythonOperator(
+        task_id=f'collect_images_{subr}',
+        python_callable=upload_new_images_to_gcs,
+        params={'subr': subr},
+        dag=dag,
     )
+    
+    # Update metadata CSV
+    metadata_tasks[subr] = PythonOperator(
+        task_id=f'update_metadata_{subr}',
+        python_callable=update_metadata_csv,
+        params={'subr': subr},
+        dag=dag,
+    )
+    
+    # Set dependencies
+    collect_tasks[subr] >> metadata_tasks[subr] 
 
-    # Run the task
-    collect_images_task
+# Create daily log after all uploads complete
+create_log = PythonOperator(
+    task_id='create_daily_log',
+    python_callable=create_daily_log,
+    dag=dag,
+)
+
+# All upload tasks must complete before log creation
+for subr in SUBREDDITS:
+    metadata_tasks[subr] >> create_log
